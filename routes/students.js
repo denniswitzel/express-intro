@@ -1,20 +1,41 @@
-import express from 'express' // Import von express
-import db from '../db.json' // Import der Datenbank
-import { saveDb } from '../fsUtils' // // Import der Funktion zum schreiben in die Datenbank
-import { v4 as uuidv4 } from 'uuid' // Importieren von 'uuid' um eine zufllige ID zu vergeben
+import express from 'express'
+import Student from '../models/Student'
 
-const router = express.Router() // Routing wird in eine Konstante gespeichert
+const router = express.Router() 
 
 router.get('/', (req, res) => {
-  // GET-Request über den Pfad http://localhost:4000/students
-  res.json(db.students) // Als response erhalten wir die Einträge unter students aus der db.json
+  Student.find()
+  .then(students => res.json(students))
+  .catch ((error) => res.json(error))
+})
+
+router.get('/:id', (req, res) => {
+  const { id } = req.params 
+  Student.findById(id)
+  .then(student => res.json(student))
+  .catch ((error) => res.json(error))
 })
 
 router.post('/', (req, res) => {
-  // POST-Request über den Pfad http://localhost:4000/students
-  const student = { ...req.body, id: uuidv4() } // Neue Konstante mit dem Inhalt des Request-Body und einer über uuid generierten ID
-  db.students.push(student) // Der neue Eintrag wird in der Datenbank in das 'students' Array geschrieben (noch nicht im Dateisystem)
-  saveDb((error) => res.json(error ?? student)) // Aufruf der Funktion zum speichern des neuen Eintrags in die 'db.json'
+  Student.create(req.body)
+  .then(student => res.json(student))
+  .catch((error) => res.json(error))
 })
+
+router.patch('/:id', (req, res) => {
+  const { id } = req.params 
+  Student.findOneAndUpdate({ _id: id }, { name: req.body.name }, { new: true })
+  .then(student => res.json(student))
+  .catch((error) => res.json(error))
+})
+
+router.delete('/:id', (req, res) => {
+  const { id } = req.params 
+  Student.findByIdAndDelete(id)
+  .then(student => res.json(`${id} wurde gelöscht`))
+  .catch((error) => res.json(error))
+})
+
+
 
 export default router // Export von Router. Wird dann in der server.js mit dem Namen energyRoute importiert
